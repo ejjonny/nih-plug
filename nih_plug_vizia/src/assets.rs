@@ -34,26 +34,26 @@ pub const NOTO_SANS_BOLD: &str = "Noto Sans";
 pub const NOTO_SANS_BOLD_ITALIC: &str = "Noto Sans Italic";
 
 pub fn register_noto_sans_regular(cx: &mut Context) {
-    cx.add_fonts_mem(&[fonts::NOTO_SANS_REGULAR]);
+    cx.add_font_mem(fonts::NOTO_SANS_REGULAR);
 }
 pub fn register_noto_sans_regular_italic(cx: &mut Context) {
-    cx.add_fonts_mem(&[fonts::NOTO_SANS_REGULAR_ITALIC]);
+    cx.add_font_mem(fonts::NOTO_SANS_REGULAR_ITALIC);
 }
 pub fn register_noto_sans_thin(cx: &mut Context) {
-    cx.add_fonts_mem(&[fonts::NOTO_SANS_THIN]);
+    cx.add_font_mem(fonts::NOTO_SANS_THIN);
 }
 pub fn register_noto_sans_thin_italic(cx: &mut Context) {
-    cx.add_fonts_mem(&[fonts::NOTO_SANS_THIN_ITALIC]);
+    cx.add_font_mem(fonts::NOTO_SANS_THIN_ITALIC);
 }
 pub fn register_noto_sans_light(cx: &mut Context) {
-    cx.add_fonts_mem(&[fonts::NOTO_SANS_LIGHT]);
+    cx.add_font_mem(fonts::NOTO_SANS_LIGHT);
 }
 pub fn register_noto_sans_light_italic(cx: &mut Context) {
-    cx.add_fonts_mem(&[fonts::NOTO_SANS_LIGHT_ITALIC]);
+    cx.add_font_mem(fonts::NOTO_SANS_LIGHT_ITALIC);
 }
 pub fn register_noto_sans_bold(cx: &mut Context) {
-    cx.add_fonts_mem(&[fonts::NOTO_SANS_BOLD]);
+    cx.add_font_mem(fonts::NOTO_SANS_BOLD);
 }
 pub fn register_noto_sans_bold_italic(cx: &mut Context) {
-    cx.add_fonts_mem(&[fonts::NOTO_SANS_BOLD_ITALIC]);
+    cx.add_font_mem(fonts::NOTO_SANS_BOLD_ITALIC);
 }

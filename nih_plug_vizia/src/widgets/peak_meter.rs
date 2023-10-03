@@ -97,9 +97,15 @@ impl PeakMeter {
                         }
 
                         let font_size = {
-                            let current = cx.current();
-                            let draw_cx = DrawContext::new(cx);
-                            draw_cx.font_size(current) * draw_cx.style.dpi_factor as f32
+                            let current_entity = cx.current();
+                            // let draw_cx = DrawContext::new(cx);
+                            let current_font_size = cx
+                                .style
+                                .font_size
+                                .get(current_entity)
+                                .unwrap_or(&FontSize::default())
+                                .0;
+                            current_font_size * cx.style.dpi_factor as f32
                         };
                         let label = if first_tick {
                             Label::new(cx, "-inf")
@@ -157,19 +163,15 @@ where
 
         // TODO: It would be cool to allow the text color property to control the gradient here. For
         //       now we'll only support basic background colors and borders.
-        let background_color = cx.background_color().cloned().unwrap_or_default();
-        let border_color = cx.border_color().cloned().unwrap_or_default();
+        let background_color = cx.background_color();
+        let border_color = cx.border_color();
         let opacity = cx.opacity();
         let mut background_color: vg::Color = background_color.into();
         background_color.set_alphaf(background_color.a * opacity);
         let mut border_color: vg::Color = border_color.into();
         border_color.set_alphaf(border_color.a * opacity);
 
-        let border_width = match cx.border_width().unwrap_or_default() {
-            Units::Pixels(val) => val,
-            Units::Percentage(val) => bounds.w.min(bounds.h) * (val / 100.0),
-            _ => 0.0,
-        };
+        let border_width = cx.border_width();
 
         let mut path = vg::Path::new();
         {

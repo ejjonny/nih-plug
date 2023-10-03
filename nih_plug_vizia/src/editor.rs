@@ -1,12 +1,12 @@
 //! The [`Editor`] trait implementation for Vizia editors.
 
-use baseview::{WindowHandle, WindowScalePolicy};
+use baseview::WindowHandle;
 use crossbeam::atomic::AtomicCell;
 use nih_plug::prelude::{Editor, GuiContext, ParentWindowHandle};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use vizia::context::backend::TextConfig;
-use vizia::prelude::*;
+use vizia::{prelude::*, WindowScalePolicy};
 
 use crate::widgets::RawParamEvent;
 use crate::{assets, widgets, ViziaState, ViziaTheming};
