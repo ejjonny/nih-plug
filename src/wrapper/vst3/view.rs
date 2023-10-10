@@ -299,7 +299,7 @@ impl<P: Vst3Plugin> IPlugView for WrapperView<P> {
                 }
                 #[cfg(target_os = "macos")]
                 Ok(type_) if type_ == VST3_PLATFORM_NSVIEW => {
-                    let mut handle = raw_window_handle::AppKitHandle::empty();
+                    let mut handle = raw_window_handle::AppKitWindowHandle::empty();
                     handle.ns_view = parent;
                     RawWindowHandle::AppKit(handle)
                 }

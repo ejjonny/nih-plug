@@ -97,7 +97,6 @@ impl PeakMeter {
                         }
 
                         let font_size = {
-                            let current = cx.current();
                             let event_cx = EventContext::new(cx);
                             event_cx.font_size() * event_cx.scale_factor()
                         };
