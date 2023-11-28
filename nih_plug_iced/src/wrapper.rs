@@ -2,13 +2,14 @@
 //! `nih_plug_iced`.
 
 use crossbeam::channel;
+use iced_baseview::Renderer;
 use nih_plug::prelude::GuiContext;
 use std::sync::Arc;
 
-use crate::futures::FutureExt;
+use crate::futures::futures::FutureExt;
 use crate::{
-    futures, subscription, Application, Color, Command, Element, IcedEditor, ParameterUpdate,
-    Subscription, WindowQueue, WindowScalePolicy, WindowSubs,
+    futures, Application, Command, Element, IcedEditor, ParameterUpdate, Subscription,
+    WindowScalePolicy, WindowSubs,
 };
 
 /// Wraps an `iced_baseview` [`Application`] around [`IcedEditor`]. Needed to allow editors to
@@ -49,6 +50,7 @@ impl<E: IcedEditor> Clone for Message<E> {
 }
 
 impl<E: IcedEditor> Application for IcedEditorWrapperApplication<E> {
+    type Theme = String;
     type Executor = E::Executor;
     type Message = Message<E>;
     type Flags = (
@@ -56,6 +58,10 @@ impl<E: IcedEditor> Application for IcedEditorWrapperApplication<E> {
         Arc<channel::Receiver<ParameterUpdate>>,
         E::InitializationFlags,
     );
+
+    fn title(&self) -> String {
+        return String::from("TEST");
+    }
 
     fn new(
         (context, parameter_updates_receiver, flags): Self::Flags,
@@ -72,16 +78,11 @@ impl<E: IcedEditor> Application for IcedEditorWrapperApplication<E> {
     }
 
     #[inline]
-    fn update(
-        &mut self,
-        window: &mut WindowQueue,
-        message: Self::Message,
-    ) -> Command<Self::Message> {
+    fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
         match message {
-            Message::EditorMessage(message) => self
-                .editor
-                .update(window, message)
-                .map(Message::EditorMessage),
+            Message::EditorMessage(message) => {
+                self.editor.update(message).map(Message::EditorMessage)
+            }
             // This message only exists to force a redraw
             Message::ParameterUpdate => Command::none(),
         }
@@ -93,15 +94,19 @@ impl<E: IcedEditor> Application for IcedEditorWrapperApplication<E> {
         window_subs: &mut WindowSubs<Self::Message>,
     ) -> Subscription<Self::Message> {
         // Since we're wrapping around `E::Message`, we need to do this transformation ourselves
+        // let mut editor_window_subs = WindowSubs {
+        //     on_frame: match &window_subs.on_frame {
+        //         Some(function) => Some(function.clone()),
+        //         _ => None,
+        //     },
+        //     on_window_will_close: match &window_subs.on_window_will_close {
+        //         Some(function) => Some(function.clone()),
+        //         _ => None,
+        //     },
+        // };
         let mut editor_window_subs = WindowSubs {
-            on_frame: match &window_subs.on_frame {
-                Some(Message::EditorMessage(message)) => Some(message.clone()),
-                _ => None,
-            },
-            on_window_will_close: match &window_subs.on_window_will_close {
-                Some(Message::EditorMessage(message)) => Some(message.clone()),
-                _ => None,
-            },
+            on_frame: window_subs.on_frame,
+            on_window_will_close: window_subs.on_window_will_close,
         };
 
         let subscription = Subscription::batch([
@@ -109,16 +114,16 @@ impl<E: IcedEditor> Application for IcedEditorWrapperApplication<E> {
             // into a stream that doesn't require consuming that receiver (which wouldn't work in
             // this case since the subscriptions function gets called repeatedly). So we'll just use
             // a crossbeam queue and this unfold instead.
-            subscription::unfold(
+            futures::subscription::unfold(
                 "parameter updates",
                 self.parameter_updates_receiver.clone(),
                 |parameter_updates_receiver| match parameter_updates_receiver.try_recv() {
-                    Ok(_) => futures::future::ready((
+                    Ok(_) => iced_baseview::futures::futures::future::ready((
                         Some(Message::ParameterUpdate),
                         parameter_updates_receiver,
                     ))
                     .boxed(),
-                    Err(_) => futures::future::pending().boxed(),
+                    Err(_) => iced_baseview::futures::futures::future::pending().boxed(),
                 },
             ),
             self.editor
@@ -127,23 +132,18 @@ impl<E: IcedEditor> Application for IcedEditorWrapperApplication<E> {
         ]);
 
         if let Some(message) = editor_window_subs.on_frame {
-            window_subs.on_frame = Some(Message::EditorMessage(message));
+            window_subs.on_frame = Some(on_frame);
         }
         if let Some(message) = editor_window_subs.on_window_will_close {
-            window_subs.on_window_will_close = Some(Message::EditorMessage(message));
+            window_subs.on_window_will_close = Some(on_window_will_close);
         }
 
         subscription
     }
 
     #[inline]
-    fn view(&mut self) -> Element<'_, Self::Message> {
+    fn view(&mut self) -> Element<'_, Self::Message, Renderer> {
         self.editor.view().map(Message::EditorMessage)
-    }
-
-    #[inline]
-    fn background_color(&self) -> Color {
-        self.editor.background_color()
     }
 
     #[inline]
@@ -154,5 +154,14 @@ impl<E: IcedEditor> Application for IcedEditorWrapperApplication<E> {
     #[inline]
     fn renderer_settings() -> iced_baseview::backend::settings::Settings {
         E::renderer_settings()
+    }
+}
+
+impl<E: IcedEditor> IcedEditorWrapperApplication<E> {
+    fn on_frame() -> <IcedEditorWrapperApplication<E> as iced_baseview::Application>::Message {
+        Message::EditorMessage(message)
+    }
+    fn on_window_will_close() -> <IcedEditorWrapperApplication<E> as iced_baseview::Application>::Message {
+        Message::EditorMessage(message)
     }
 }

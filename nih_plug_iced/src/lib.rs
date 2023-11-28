@@ -89,9 +89,15 @@
 //! }
 //! ```
 
-use baseview::WindowScalePolicy;
+use iced_baseview::baseview::WindowScalePolicy;
 use crossbeam::atomic::AtomicCell;
 use crossbeam::channel;
+use iced_baseview::core::{Color, Element};
+use iced_baseview::futures::Executor;
+use iced_baseview::runtime::Command;
+use iced_baseview::window::WindowSubs;
+use iced_renderer::Settings;
+use iced_renderer::core::Font;
 use nih_plug::params::persist::PersistentField;
 use nih_plug::prelude::{Editor, GuiContext};
 use serde::{Deserialize, Serialize};
@@ -102,6 +108,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 use crate::widgets::ParamMessage;
+use crate::futures::Subscription;
 
 /// Re-export for convenience.
 // FIXME: Running `cargo doc` on nightly compilers without this attribute triggers an ICE
@@ -179,7 +186,6 @@ pub trait IcedEditor: 'static + Send + Sync + Sized {
     /// [`handle_param_message()`][Self::handle_param_message()] to handle the parameter update.
     fn update(
         &mut self,
-        window: &mut WindowQueue,
         message: Self::Message,
     ) -> Command<Self::Message>;
 
@@ -192,7 +198,7 @@ pub trait IcedEditor: 'static + Send + Sync + Sized {
     }
 
     /// See [`Application::view`].
-    fn view(&mut self) -> Element<'_, Self::Message>;
+    fn view(&mut self) -> Element<'_, Self::Message, Renderer>;
 
     /// See [`Application::background_color`].
     fn background_color(&self) -> Color {
@@ -207,16 +213,16 @@ pub trait IcedEditor: 'static + Send + Sync + Sized {
     }
 
     /// See [`Application::renderer_settings`].
-    fn renderer_settings() -> iced_baseview::backend::settings::Settings {
-        iced_baseview::backend::settings::Settings {
+    fn renderer_settings() -> Settings {
+        Settings {
             // Enable some anti-aliasing by default. Since GUIs are likely very simple and most of
             // the work will be on the CPU anyways this should not affect performance much.
-            antialiasing: Some(iced_baseview::backend::settings::Antialiasing::MSAAx4),
+            antialiasing: Some(graphics::Antialiasing::MSAAx4),
             // Use Noto Sans as the default font as that renders a bit more cleanly than the default
             // Lato font. This crate also contains other weights and versions of this font you can
             // use for individual widgets.
-            default_font: Some(crate::assets::fonts::NOTO_SANS_REGULAR),
-            ..iced_baseview::backend::settings::Settings::default()
+            default_font: crate::assets::NOTO_SANS_REGULAR,
+            ..Settings::default()
         }
     }
 

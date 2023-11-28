@@ -1,9 +1,10 @@
 //! And [`Editor`] implementation for iced.
 
-use baseview::{WindowOpenOptions, WindowScalePolicy};
+use iced_baseview::{baseview::{WindowOpenOptions, WindowScalePolicy}, Settings};
 use crossbeam::atomic::AtomicCell;
 use crossbeam::channel;
-pub use iced_baseview::*;
+use iced_baseview::{settings::IcedBaseviewSettings, baseview};
+pub use self::baseview::*;
 use nih_plug::prelude::{Editor, GuiContext, ParentWindowHandle};
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
@@ -35,7 +36,7 @@ impl<E: IcedEditor> Editor for IcedEditorWrapper<E> {
 
         // TODO: iced_baseview does not have gracefuly error handling for context creation failures.
         //       This will panic if the context could not be created.
-        let window = IcedWindow::<wrapper::IcedEditorWrapperApplication<E>>::open_parented(
+        let window = iced_baseview::window::IcedWindow::<wrapper::IcedEditorWrapperApplication<E>>::open_parented(
             &parent,
             Settings {
                 window: WindowOpenOptions {
@@ -127,7 +128,7 @@ impl<E: IcedEditor> Editor for IcedEditorWrapper<E> {
 /// The window handle used for [`IcedEditorWrapper`].
 struct IcedEditorHandle<Message: 'static + Send> {
     iced_state: Arc<IcedState>,
-    window: iced_baseview::WindowHandle<Message>,
+    window: iced_baseview::window::WindowHandle<Message>,
 }
 
 /// The window handle enum stored within 'WindowHandle' contains raw pointers. Is there a way around
